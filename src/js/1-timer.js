@@ -1,5 +1,23 @@
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+import iziToast from 'izitoast';
+import 'izitoast/dist/css/iziToast.min.css';
+
+const startButton = document.querySelector('button[data-start]');
+const stopButton = document.querySelector('button[data-stop]');
+const datetimePicker = document.querySelector('#datetime-picker');
+
+const refs = {
+  days: document.querySelector('span[data-days]'),
+  hours: document.querySelector('span[data-hours]'),
+  minutes: document.querySelector('span[data-minutes]'),
+  seconds: document.querySelector('span[data-seconds]'),
+};
+
+let timerId = null;
+let userSelectDate = null;
+startButton.disabled = true;
+stopButton.disabled = true;
 
 const options = {
   enableTime: true,
@@ -8,46 +26,49 @@ const options = {
   minuteIncrement: 1,
   onClose(selectedDates) {
     if (selectedDates[0] < new Date()) {
-      window.alert('Please choose a date in the future');
+      iziToast.error({
+        title: 'Помилка',
+        message: 'Будь ласка, оберіть дату в майбутньому',
+        position: 'topRight',
+      });
       startButton.disabled = true;
-      return;
     } else {
       startButton.disabled = false;
       userSelectDate = selectedDates[0];
     }
-    console.log(selectedDates[0]);
   },
 };
 
 flatpickr('#datetime-picker', options);
 
-const startButton = document.querySelector('button[data-start]');
-const stopButton = document.querySelector('button[data-stop]');
-stopButton.disabled = true;
-const datetimePicker = document.querySelector('#datetime-picker');
-let timerId = null;
-let userSelectDate = null;
-startButton.disabled = true;
-
 startButton.addEventListener('click', () => {
   startButton.disabled = true;
   stopButton.disabled = false;
   datetimePicker.disabled = true;
+
   timerId = setInterval(() => {
     const currentTime = new Date();
     const deltaTime = userSelectDate - currentTime;
+
     if (deltaTime <= 0) {
       clearInterval(timerId);
       updateClockFace({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      window.alert('Time is up!');
+      iziToast.success({
+        title: 'Готово',
+        message: 'Час вийшов!',
+        position: 'topRight',
+      });
       datetimePicker.disabled = false;
       startButton.disabled = true;
+      stopButton.disabled = true;
       return;
     }
+
     const timeComponents = convertMs(deltaTime);
     updateClockFace(timeComponents);
   }, 1000);
 });
+
 stopButton.addEventListener('click', () => {
   clearInterval(timerId);
   updateClockFace({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -63,11 +84,8 @@ function convertMs(ms) {
   const day = hour * 24;
 
   const days = Math.floor(ms / day);
-
   const hours = Math.floor((ms % day) / hour);
-
   const minutes = Math.floor(((ms % day) % hour) / minute);
-
   const seconds = Math.floor((((ms % day) % hour) % minute) / second);
 
   return { days, hours, minutes, seconds };
@@ -83,17 +101,3 @@ function updateClockFace({ days, hours, minutes, seconds }) {
   refs.minutes.textContent = addLeadingZero(minutes);
   refs.seconds.textContent = addLeadingZero(seconds);
 }
-
-const refs = {
-  days: document.querySelector('span[data-days]'),
-  hours: document.querySelector('span[data-hours]'),
-  minutes: document.querySelector('span[data-minutes]'),
-  seconds: document.querySelector('span[data-seconds]'),
-};
-
-updateClockFace = ({ days, hours, minutes, seconds }) => {
-  refs.days.textContent = addLeadingZero(days);
-  refs.hours.textContent = addLeadingZero(hours);
-  refs.minutes.textContent = addLeadingZero(minutes);
-  refs.seconds.textContent = addLeadingZero(seconds);
-};
