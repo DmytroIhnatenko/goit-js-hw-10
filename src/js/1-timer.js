@@ -4,7 +4,7 @@ import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
 const startButton = document.querySelector('button[data-start]');
-const stopButton = document.querySelector('button[data-stop]');
+
 const datetimePicker = document.querySelector('#datetime-picker');
 
 const refs = {
@@ -17,7 +17,6 @@ const refs = {
 let timerId = null;
 let userSelectDate = null;
 startButton.disabled = true;
-stopButton.disabled = true;
 
 const options = {
   enableTime: true,
@@ -27,8 +26,8 @@ const options = {
   onClose(selectedDates) {
     if (selectedDates[0] < new Date()) {
       iziToast.error({
-        title: 'Помилка',
-        message: 'Будь ласка, оберіть дату в майбутньому',
+        title: 'Error',
+        message: 'Please choose a date in the future',
         position: 'topRight',
       });
       startButton.disabled = true;
@@ -43,7 +42,7 @@ flatpickr('#datetime-picker', options);
 
 startButton.addEventListener('click', () => {
   startButton.disabled = true;
-  stopButton.disabled = false;
+
   datetimePicker.disabled = true;
 
   timerId = setInterval(() => {
@@ -60,21 +59,13 @@ startButton.addEventListener('click', () => {
       });
       datetimePicker.disabled = false;
       startButton.disabled = true;
-      stopButton.disabled = true;
+
       return;
     }
 
     const timeComponents = convertMs(deltaTime);
     updateClockFace(timeComponents);
   }, 1000);
-});
-
-stopButton.addEventListener('click', () => {
-  clearInterval(timerId);
-  updateClockFace({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  stopButton.disabled = true;
-  datetimePicker.disabled = false;
-  startButton.disabled = true;
 });
 
 function convertMs(ms) {
